@@ -14,6 +14,20 @@ def load_data(file_path):
             st.error(f"Σφάλμα φόρτωσης δεδομένων: {e}")
     return data
 
+def validate_data(df):
+    if df is None:
+        return False, "Δεν ήταν δυνατή η φόρτωση των δεδομένων."
+
+    # Ελέγξτε αν ο πίνακας έχει τουλάχιστον 2 στήλες (F χαρακτηριστικά + 1 label)
+    if df.shape[1] < 2:
+        return False, "Ο πίνακας δεδομένων πρέπει να έχει τουλάχιστον δύο στήλες (F χαρακτηριστικά + 1 label)."
+
+    # Ελέγξτε αν η τελευταία στήλη περιέχει την ετικέτα (label)
+    if not pd.api.types.is_numeric_dtype(df.iloc[:, -1]) and not pd.api.types.is_string_dtype(df.iloc[:, -1]):
+        return False, "Η τελευταία στήλη πρέπει να περιέχει τις ετικέτες (labels) των δειγμάτων."
+
+    return True, "Τα δεδομένα είναι έγκυρα."
+
 def main():
     st.title("Φόρτωση Δεδομένων")
 
@@ -23,11 +37,12 @@ def main():
     if uploaded_file is not None:
         # Φορτώστε τα δεδομένα αν το αρχείο είναι μη κενό
         df = load_data(uploaded_file)
-        if df is not None:
+        is_valid, message = validate_data(df)
+        if is_valid:
             st.write("Τα δεδομένα φορτώθηκαν επιτυχώς:")
             st.write(df)
         else:
-            st.error("Δεν ήταν δυνατή η φόρτωση των δεδομένων.")
+            st.error(message)
 
 if __name__ == "__main__":
     main()
