@@ -9,6 +9,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score, silhouette_score
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
 
 def load_data(file_path):
     data = None
@@ -62,7 +65,7 @@ def visualize_2d(df):
 
     st.pyplot(fig)
 
-def classification_tab():
+def classification_tab(df):
     st.subheader("Classification Algorithms")
     st.write("Please select parameters for classification algorithms.")
 
@@ -73,9 +76,36 @@ def classification_tab():
         max_depth = st.slider("Max Depth", min_value=1, max_value=20, value=5)
 
         # Create and train Random Forest classifier
-        classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
-        # Perform classification and display results
-        # ...
+        train_and_visualize_classification(df, n_estimators, max_depth)
+
+def train_and_visualize_classification(df, n_estimators, max_depth):
+    # Encoding labels
+    label_encoder = LabelEncoder()
+    df.iloc[:, -1] = label_encoder.fit_transform(df.iloc[:, -1])
+
+    # Splitting data into train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(df.iloc[:, :-1], df.iloc[:, -1], test_size=0.2, random_state=42)
+    y_train = label_encoder.fit_transform(y_train)  # Κωδικοποίηση των ετικετών εκπαίδευσης
+    y_test = label_encoder.transform(y_test)  # Κωδικοποίηση των ετικετών δοκιμής
+
+    # Create and train Random Forest classifier
+    classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
+    classifier.fit(X_train, y_train)
+
+    # Predictions
+    y_pred = classifier.predict(X_test)
+
+    # Evaluation
+    accuracy = accuracy_score(y_test, y_pred)
+    st.write(f"Accuracy: {accuracy}")
+
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    sns.heatmap(cm, annot=True, fmt="d")
+    st.pyplot()
+
+    # Other evaluation metrics can be added as needed
+
 
 def clustering_tab():
     st.subheader("Clustering Algorithms")
@@ -137,10 +167,9 @@ def main():
             st.write(df.head())
 
             visualize_2d(df)
+            classification_tab(df)  # Περνάμε το df ως παράμετρο στην classification_tab()
         else:
             st.error(message)
 
 if __name__ == "__main__":
     main()
-    classification_tab()
-    clustering_tab()
