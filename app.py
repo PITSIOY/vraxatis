@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import LabelEncoder
+from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_iris
+from sklearn.metrics import accuracy_score, silhouette_score
 
 def load_data(file_path):
     data = None
@@ -57,6 +62,68 @@ def visualize_2d(df):
 
     st.pyplot(fig)
 
+def classification_tab():
+    st.subheader("Classification Algorithms")
+    st.write("Please select parameters for classification algorithms.")
+
+    # Add UI elements for classification algorithms
+    algorithm = st.selectbox("Select Classification Algorithm", ["Random Forest"])
+    if algorithm == "Random Forest":
+        n_estimators = st.slider("Number of Estimators", min_value=1, max_value=100, value=10)
+        max_depth = st.slider("Max Depth", min_value=1, max_value=20, value=5)
+
+        # Create and train Random Forest classifier
+        classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
+        # Perform classification and display results
+        # ...
+
+def clustering_tab():
+    st.subheader("Clustering Algorithms")
+    st.write("Please select parameters for clustering algorithms.")
+
+    # Add UI elements for clustering algorithms
+    algorithm = st.selectbox("Select Clustering Algorithm", ["KMeans"])
+    if algorithm == "KMeans":
+        n_clusters = st.slider("Number of Clusters", min_value=1, max_value=10, value=3)
+
+        # Create and fit KMeans clustering model
+        kmeans = KMeans(n_clusters=n_clusters)
+        # Perform clustering and display results
+        # ...
+
+def evaluate_classification_algorithm(df, algorithm, test_size=0.2):
+    X_train, X_test, y_train, y_test = train_test_split(df.iloc[:, :-1], df.iloc[:, -1], test_size=test_size, random_state=42)
+    
+    if algorithm == "Random Forest":
+        n_estimators = st.slider("Number of Estimators", min_value=1, max_value=100, value=10)
+        max_depth = st.slider("Max Depth", min_value=1, max_value=20, value=5)
+
+        # Create and train Random Forest classifier
+        classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth)
+        classifier.fit(X_train, y_train)
+        
+        # Predict
+        y_pred = classifier.predict(X_test)
+
+        # Evaluate
+        accuracy = accuracy_score(y_test, y_pred)
+        return accuracy
+
+def evaluate_clustering_algorithm(df, algorithm):
+    if algorithm == "KMeans":
+        n_clusters = st.slider("Number of Clusters", min_value=1, max_value=10, value=3)
+
+        # Create and fit KMeans clustering model
+        kmeans = KMeans(n_clusters=n_clusters)
+        kmeans.fit(df.iloc[:, :-1])
+        
+        # Predict
+        labels = kmeans.labels_
+
+        # Evaluate
+        silhouette = silhouette_score(df.iloc[:, :-1], labels)
+        return silhouette
+
 def main():
     st.title("Data Analysis App")
 
@@ -75,3 +142,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    classification_tab()
+    clustering_tab()
